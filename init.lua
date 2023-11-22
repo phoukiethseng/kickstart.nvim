@@ -37,7 +37,6 @@ I hope you enjoy your Neovim journey,
 
 P.S. You can delete this when you're done too. It's your config now :)
 --]]
-
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are required (otherwise wrong leader will be used)
@@ -48,17 +47,34 @@ vim.g.maplocalleader = ' '
 --    https://github.com/folke/lazy.nvim
 --    `:help lazy.nvim.txt` for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
+
+-- [[ Configure Git connection ]]
+-- Option to use SHH connection instead of default https
+local useSSH = true
+
+-- Lazy Repository URL
+local lazyGitHubUrl = useSSH and 'git@github.com:folke/lazy.nvim.git' or 'https://github.com/folke/lazy.nvim.git'
+
+-- [[ Lazy Setup Options ]]
+local lazy_setup_opts = {
+  git = {
+    -- We can now choose type of git connections
+    url_format = useSSH and "git@github.com:%s.git" or "https://github.com/%s.git",
+  }
+}
+
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system {
     'git',
     'clone',
     '--filter=blob:none',
-    'https://github.com/folke/lazy.nvim.git',
+    lazyGitHubUrl,
     '--branch=stable', -- latest stable release
     lazypath,
   }
 end
 vim.opt.rtp:prepend(lazypath)
+
 
 -- [[ Configure plugins ]]
 -- NOTE: Here is where you install your plugins.
@@ -217,6 +233,23 @@ require('lazy').setup({
     build = ':TSUpdate',
   },
 
+  -- File Explorer plugin
+  {
+    "nvim-tree/nvim-tree.lua",
+    version = "*",
+    lazy = false,
+    dependencies = {
+    	"nvim-tree/nvim-web-devicons",
+    },
+    config = function()
+        require("nvim-tree").setup {}
+    end,
+  },
+
+  -- Prettier plugin for Vim
+  {
+    "prettier/vim-prettier",
+  }
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
   --       Uncomment any of the lines below to enable them.
@@ -230,7 +263,7 @@ require('lazy').setup({
   --
   --    For additional information see: https://github.com/folke/lazy.nvim#-structuring-your-plugins
   -- { import = 'custom.plugins' },
-}, {})
+}, lazy_setup_opts)
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -288,6 +321,9 @@ vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous dia
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostics list' })
+
+-- Nvim Tree keymaps
+vim.keymap.set('n', '<leader>f', require "nvim-tree.api" .tree.toggle, { desc = "Toggle Nvim Tree" })
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
@@ -378,7 +414,7 @@ vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = 
 vim.defer_fn(function()
   require('nvim-treesitter.configs').setup {
     -- Add languages to be installed here that you want installed for treesitter
-    ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'bash' },
+    ensure_installed = { 'c', 'cpp', 'go', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'bash' },
 
     -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
     auto_install = false,
